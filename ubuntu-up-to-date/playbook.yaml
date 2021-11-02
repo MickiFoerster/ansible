@@ -1,17 +1,21 @@
 ---
-- hosts: servers
+- hosts: ubuntu
   become: true
   become_user: root
   tasks:
     - name: Update apt repo and cache on all Debian/Ubuntu boxes
-      apt: update_cache=yes force_apt_get=yes cache_valid_time=3600
+      ansible.builtin.apt: update_cache=yes cache_valid_time=86400
 
     - name: Upgrade all packages on servers
-      apt: upgrade=dist force_apt_get=yes
+      ansible.builtin.apt: upgrade=dist
 
     - name: Check if a reboot is needed on all servers
       register: reboot_required_file
-      stat: path=/var/run/reboot-required get_md5=no
+      ansible.builtin.stat: path=/var/run/reboot-required get_checksum=no
+
+    - name: Show file stat data
+      debug:
+        msg: "{{ reboot_required_file }}"
 
     - name: Reboot the box if kernel updated
       reboot:
