@@ -1,0 +1,38 @@
+---
+- hosts: ubuntu
+  become: true
+  become_user: root
+  tasks:
+    - name: Install nginx 
+      ansible.builtin.apt: name=nginx state=latest
+
+    - name: Start service nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+    - name: Restart service nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+      notify: Nginx restarted
+
+
+    - name: Stop service nginx per SystemD module
+      ansible.builtin.systemd:
+        name: nginx
+        state: stopped
+    - name: Restart service nginx per SystemD module
+      ansible.builtin.systemd:
+        name: nginx
+        state: restarted
+        daemon_reload: yes
+      notify: Nginx restarted per SystemD
+
+  handlers:
+    - name: Nginx restarted
+      debug:
+        msg: Nginx was restarted
+    - name: Nginx restarted per SystemD
+      debug:
+        msg: Nginx was restarted by SystemD module
+...
