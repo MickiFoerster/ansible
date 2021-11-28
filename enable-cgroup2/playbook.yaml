@@ -1,0 +1,20 @@
+---
+- hosts: ubuntu
+  become: true
+  become_user: root
+  tasks:
+    - name: Download script
+      get_url:
+        url: https://raw.githubusercontent.com/MickiFoerster/shell-tools/master/cgroup-patcher.sh
+        dest: /tmp/
+
+    - name: Make script executable
+      file: dest=/tmp/cgroup-patcher.sh mode=a+x
+
+    - name: Run a script with arguments (free form)
+      ansible.builtin.command: /tmp/cgroup-patcher.sh
+
+    - name: Reboot to activate SystemD with cgroup V2
+      ansible.builtin.reboot:
+
+...
