@@ -29,4 +29,11 @@
         remote_src: yes
         src: /tmp/kafka_2.13-3.0.0.tgz
         dest: "{{ ansible_env.HOME }}"
+
+    - name: Install Java
+      become: true
+      ansible.builtin.apt:
+        name: openjdk-11-jdk
+        state: present
+        update_cache: yes
 ...
