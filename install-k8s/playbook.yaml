@@ -1,0 +1,10 @@
+---
+- hosts: ubuntu
+  become: true
+  become_user: root
+- name: Enable Cgroup2
+  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
+
+- name: Install CRI-O
+  ansible.builtin.import_playbook: ../install-CRI-O/playbook.yaml
+...
