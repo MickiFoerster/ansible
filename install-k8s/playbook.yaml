@@ -10,6 +10,8 @@
       ansible.builtin.script: helpers/mem.py {{memsize_kb}}
     - name: Check number of CPUs
       ansible.builtin.script: helpers/cpu.py {{minimal_number_cpus}}
+    - name: Disable swap for kubelet (see hints on kubernetes.io)
+      ansible.builtin.script: helpers/turn-off-swap.sh
 
 - name: Enable Cgroup2
   ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
