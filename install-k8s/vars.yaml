@@ -1,0 +1,4 @@
+---
+path_product_uuid: "/sys/class/dmi/id/product_uuid"
+path_machine_id: "/etc/machine-id"
+...

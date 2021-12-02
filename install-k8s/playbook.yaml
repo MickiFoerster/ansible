@@ -5,6 +5,8 @@
   vars:
     memsize_kb: 2035000
     minimal_number_cpus: 2
+  vars_files:
+    - vars.yaml
   tasks:
     - name: Check size of memory
       ansible.builtin.script: helpers/mem.py {{memsize_kb}}
@@ -13,14 +15,32 @@
     - name: Disable swap for kubelet (see hints on kubernetes.io)
       ansible.builtin.script: helpers/turn-off-swap.sh
     - name: Fetch produc_uuid
-      ansible.builtin.slurp:
-        src: /sys/class/dmi/id/product_uuid
-      register: product_uuid
-    - name: Print returned information
+      ansible.builtin.fetch:
+        src: "{{path_product_uuid}}"
+        dest: /tmp/product_uuid
+    - name: Fetch machine ID 
+      ansible.builtin.fetch:
+        src: "{{path_machine_id}}"
+        dest: /tmp/machine-id
+    - name: Show interfaces
       ansible.builtin.debug:
-        msg: "{{ product_uuid['content'] | b64decode }}"
-          #- name: Check uniqueness of UUIDs
-          #      local_action: ansible.builtin.command hostname
+        msg: "{{item}}"
+      loop: "{{ ansible_interfaces }} "
+
+- name: Check uniqness
+  hosts: localhost
+  connection: local
+  vars_files:
+      - vars.yaml
+  tasks:
+    - name: Show product UUIDs
+      ansible.builtin.command: cat "/tmp/product_uuid/{{ item }}{{path_product_uuid}}"
+      loop: "{{ groups['all'] }}"
+    - name: Show machine IDs
+      ansible.builtin.command: cat "/tmp/machine-id/{{ item }}{{path_machine_id}}"
+      loop: "{{ groups['all'] }}"
+
+
 
         #- name: Enable Cgroup2
         #  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
