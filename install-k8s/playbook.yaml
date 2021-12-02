@@ -12,11 +12,20 @@
       ansible.builtin.script: helpers/cpu.py {{minimal_number_cpus}}
     - name: Disable swap for kubelet (see hints on kubernetes.io)
       ansible.builtin.script: helpers/turn-off-swap.sh
+    - name: Fetch produc_uuid
+      ansible.builtin.slurp:
+        src: /sys/class/dmi/id/product_uuid
+      register: product_uuid
+    - name: Print returned information
+      ansible.builtin.debug:
+        msg: "{{ product_uuid['content'] | b64decode }}"
+          #- name: Check uniqueness of UUIDs
+          #      local_action: ansible.builtin.command hostname
 
-- name: Enable Cgroup2
-  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
-
-- name: Install CRI-O
-  ansible.builtin.import_playbook: ../install-CRI-O/playbook.yaml
-
+        #- name: Enable Cgroup2
+        #  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
+        #
+        #- name: Install CRI-O
+        #  ansible.builtin.import_playbook: ../install-CRI-O/playbook.yaml
+        #
 ...
