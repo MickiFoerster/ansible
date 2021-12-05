@@ -1,0 +1,9 @@
+---
+# tasks file for java
+- name: Install Java
+  become: true
+  ansible.builtin.apt:
+    name: openjdk-11-jdk
+    state: present
+    update_cache: yes
+...

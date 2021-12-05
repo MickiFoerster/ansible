@@ -1,39 +1,6 @@
 ---
 - hosts: ubuntu
-  tasks:
-    - name: uptime of hosts
-      ansible.builtin.shell:
-        cmd: uptime
-      register: out
-
-    - debug: var=out.stdout_lines
-
-    - name: Check if archive already exists
-      ansible.builtin.stat: 
-        path: /tmp/kafka_2.13-3.0.0.tgz
-        checksum_algorithm: sha512
-        get_checksum: yes
-      register: kafka_tgz_exist
-
-    - debug: var=kafka_tgz_exist.stat.exists
-
-    - name: Download Kafka with checksum url (sha256)
-      get_url:
-        url: https://dlcdn.apache.org/kafka/3.0.0/kafka_2.13-3.0.0.tgz
-        dest: /tmp/
-        checksum: sha512:86cdeb04af123399858d03431e9777948c1c40ec0d843966cf9bd90b8235b47ebbb5cb96d1f0660710b9286da86bbb5ee65e21e757606f5a1e67f970ae5cf57c
-      when: not kafka_tgz_exist.stat.exists or kafka_tgz_exist.stat.checksum != "86cdeb04af123399858d03431e9777948c1c40ec0d843966cf9bd90b8235b47ebbb5cb96d1f0660710b9286da86bbb5ee65e21e757606f5a1e67f970ae5cf57c"
-
-    - name: Extract Kafka tgz 
-      ansible.builtin.unarchive:
-        remote_src: yes
-        src: /tmp/kafka_2.13-3.0.0.tgz
-        dest: "{{ ansible_env.HOME }}"
-
-    - name: Install Java
-      become: true
-      ansible.builtin.apt:
-        name: openjdk-11-jdk
-        state: present
-        update_cache: yes
+  roles:
+    - java
+    - zookeeper
 ...
