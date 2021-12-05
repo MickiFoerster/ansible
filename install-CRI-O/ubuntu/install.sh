@@ -44,11 +44,15 @@ curl -L https://download.opensuse.org/repositories/devel:kubic:libcontainers:sta
 sudo apt-get update
 sudo apt-get install -y cri-o cri-o-runc
 
-cat <<EOF | sudo tee /etc/crio/crio.conf.d/02-cgroup-manager.conf
-[crio.runtime]
-conmon_cgroup = "pod"
-cgroup_manager = "cgroupfs"
-EOF
+# The [Container runtimes page](https://kubernetes.io/docs/setup/production-environment/container-runtimes) 
+# explains that the systemd driver is recommended for kubeadm based setups instead 
+# of the cgroupfs driver, because kubeadm manages the kubelet as a systemd service.
+# Therefore, do not enable cgroupfs usage here:
+# cat <<EOF | sudo tee /etc/crio/crio.conf.d/02-cgroup-manager.conf
+# [crio.runtime]
+# conmon_cgroup = "pod"
+# cgroup_manager = "cgroupfs"
+# EOF
 
 sudo systemctl daemon-reload
 sudo systemctl enable crio --now

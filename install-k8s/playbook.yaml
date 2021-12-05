@@ -5,6 +5,114 @@
   vars:
     memsize_kb: 2035000
     minimal_number_cpus: 2
+  vars_files:
+    - vars.yaml
+  tasks:
+    - name: Check size of memory
+      ansible.builtin.script: helpers/mem.py {{memsize_kb}}
+    - name: Check number of CPUs
+      ansible.builtin.script: helpers/cpu.py {{minimal_number_cpus}}
+    - name: Disable swap for kubelet (see hints on kubernetes.io)
+      ansible.builtin.script: helpers/turn-off-swap.sh
+    - name: Fetch produc_uuid
+      ansible.builtin.fetch:
+        src: "{{path_product_uuid}}"
+        dest: /tmp/product_uuid
+    - name: Fetch machine ID 
+      ansible.builtin.fetch:
+        src: "{{path_machine_id}}"
+        dest: /tmp/machine-id
+    - name: Show interfaces
+      ansible.builtin.debug:
+        msg: "{{item}}"
+      loop: "{{ ansible_interfaces }} "
+
+- name: Check uniqness
+  hosts: localhost
+  connection: local
+  vars_files:
+      - vars.yaml
+  tasks:
+    - name: Show product UUIDs
+      ansible.builtin.command: cat "/tmp/product_uuid/{{ item }}{{path_product_uuid}}"
+      loop: "{{ groups['all'] }}"
+    - name: Show machine IDs
+      ansible.builtin.command: cat "/tmp/machine-id/{{ item }}{{path_machine_id}}"
+      loop: "{{ groups['all'] }}"
+
+
+- hosts: ubuntu
+  become: true
+  become_user: root
+  tasks:
+    - name: Letting iptables see bridged traffic
+      ansible.builtin.script: helpers/letting-iptables-see-bridged-traffic.sh
+
+- name: Enable Cgroup2
+  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
+
+- name: Install CRI-O
+  ansible.builtin.import_playbook: ../install-CRI-O/playbook.yaml
+
+- hosts: ubuntu
+  name: Installing kubeadm, kubelet and kubectl
+  become: true
+  become_user: root
+  tasks:
+    - name: Prerequisites for kube* tools
+      ansible.builtin.apt:
+        update_cache: true
+        pkg:
+        - apt-transport-https
+        - ca-certificates 
+        - curl
+
+    - name: Download the Google Cloud public signing key
+      get_url:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        dest: /usr/share/keyrings/kubernetes-archive-keyring.gpg 
+
+    - name: Add the Kubernetes apt repository
+      ansible.builtin.apt_repository:
+        repo: deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+
+    - name: Install kubelet, kubectl, kubeadm
+      ansible.builtin.apt:
+        update_cache: true
+        pkg:
+        - kubeadm
+        - kubectl
+        - kubelet 
+
+    - name: Hold kubeadm
+      dpkg_selections:
+        name: kubeadm
+        selection: hold
+    - name: Hold kubectl
+      dpkg_selections:
+        name: kubectl
+        selection: hold
+    - name: Hold kubelet
+      dpkg_selections:
+        name: kubelet
+        selection: hold
+
+- hosts: testing-node-1
+  name: Create K8s cluster
+  tasks:
+    - debug: var=ansible_eth1.ipv4.address
+    - copy: 
+        dest: /tmp/asdf
+        content: |
+          kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address={{ansible_eth1.ipv4.address}}
+
+- hosts: ubuntu
+  become: true
+  become_user: root
+  vars:
+    memsize_kb: 2035000
+    minimal_number_cpus: 2
   tasks:
     - name: Check size of memory
       ansible.builtin.script: helpers/mem.py {{memsize_kb}}
