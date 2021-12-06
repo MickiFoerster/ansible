@@ -40,6 +40,8 @@
       ansible.builtin.command: cat "/tmp/machine-id/{{ item }}{{path_machine_id}}"
       loop: "{{ groups['all'] }}"
 
+- name: Enable Cgroup2
+  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
 
 - hosts: ubuntu
   become: true
@@ -47,9 +49,6 @@
   tasks:
     - name: Letting iptables see bridged traffic
       ansible.builtin.script: helpers/letting-iptables-see-bridged-traffic.sh
-
-- name: Enable Cgroup2
-  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
 
 - name: Install CRI-O
   ansible.builtin.import_playbook: ../install-CRI-O/playbook.yaml
@@ -81,9 +80,10 @@
       ansible.builtin.apt:
         update_cache: true
         pkg:
-        - kubeadm
-        - kubectl
-        - kubelet 
+          - kubeadm="{{k8s_version}}"
+          - kubectl="{{k8s_version}}"
+          - kubelet="{{k8s_version}}"
+        allow_downgrade: yes
 
     - name: Hold kubeadm
       dpkg_selections:
@@ -98,42 +98,10 @@
         name: kubelet
         selection: hold
 
-- hosts: testing-node-1
-  name: Create K8s cluster
-  tasks:
-    - debug: var=ansible_eth1.ipv4.address
-    - copy: 
-        dest: /tmp/asdf
-        content: |
-          kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address={{ansible_eth1.ipv4.address}}
-
 - hosts: ubuntu
+  name: Create K8s cluster with kubeadm
   become: true
   become_user: root
-  vars:
-    memsize_kb: 2035000
-    minimal_number_cpus: 2
-  tasks:
-    - name: Check size of memory
-      ansible.builtin.script: helpers/mem.py {{memsize_kb}}
-    - name: Check number of CPUs
-      ansible.builtin.script: helpers/cpu.py {{minimal_number_cpus}}
-    - name: Disable swap for kubelet (see hints on kubernetes.io)
-      ansible.builtin.script: helpers/turn-off-swap.sh
-
-- name: Enable Cgroup2
-  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
-
-- hosts: testing-node-1
-  name: Create K8s cluster
-  tasks:
-    - debug: var=ansible_eth1.ipv4.address
-    - copy: 
-        dest: /tmp/asdf
-        content: |
-          kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address={{ansible_eth1.ipv4.address}}
-
-- hosts: ubuntu
   tasks:
     - debug:
         var: ansible_facts
@@ -143,4 +111,16 @@
           {% for addr in ansible_facts.all_ipv4_addresses %}
           {{addr}}   {{ansible_facts.hostname}}
           {% endfor %}
+    - ansible.builtin.shell: kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address={{ansible_eth1.ipv4.address}}
+    - ansible.builtin.shell: kubectl taint nodes --all node-role.kubernetes.io/master-
 ...
+# Untaint master
+# kubectl taint nodes --all node-role.kubernetes.io/master-
+#
+# Build kubeadm join command:
+# openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+# kubeadm token list
+# kubeadm join 192.168.99.200:6443 --token=8niebf.ehlln5d8p7d4hfj8 --discovery-token-ca-cert-hash sha256:7e545e6c5923b44bd70a8b983581a9edfcdd75a4bac4560927df15fc56e9a70d
+
+# Get versions for kubeadm, ...
+# curl -s https://packages.cloud.google.com/apt/dists/kubernetes-xenial/main/binary-amd64/Packages | grep Version | awk '{print $2}'
