@@ -46,18 +46,15 @@
 - hosts: ubuntu
   become: true
   become_user: root
+  vars_files:
+    - vars.yaml
   tasks:
+    - debug:
+        msg: "{{cri_version}}"
     - name: Letting iptables see bridged traffic
       ansible.builtin.script: helpers/letting-iptables-see-bridged-traffic.sh
-
-- name: Install CRI-O
-  ansible.builtin.import_playbook: ../install-CRI-O/playbook.yaml
-
-- hosts: ubuntu
-  name: Installing kubeadm, kubelet and kubectl
-  become: true
-  become_user: root
-  tasks:
+    - name: Install CRI-O
+      ansible.builtin.script: ../install-CRI-O/ubuntu/install.sh "{{cri_version}}"
     - name: Prerequisites for kube* tools
       ansible.builtin.apt:
         update_cache: true

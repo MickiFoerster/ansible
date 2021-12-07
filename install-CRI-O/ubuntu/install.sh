@@ -80,6 +80,8 @@ fi
 
 sudo apt-get install -y $(cat $t) cri-o-runc
 
+echo "PATH=/usr/lib/cri-o-runc/sbin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin" >> /etc/default/crio
+
 sudo systemctl daemon-reload
 sudo systemctl enable crio --now
 

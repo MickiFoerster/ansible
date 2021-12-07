@@ -2,4 +2,5 @@
 path_product_uuid: "/sys/class/dmi/id/product_uuid"
 path_machine_id: "/etc/machine-id"
 k8s_version: "1.16.15-00"
+cri_version: "1.16"
 ...
