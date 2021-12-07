@@ -2,7 +2,9 @@
 - hosts: ubuntu
   become: true
   become_user: root
+  vars_files:
+    - vars.yaml
   tasks:
   - name: Install CRI-O
-    ansible.builtin.script: ubuntu/install.sh
+    ansible.builtin.script: ubuntu/install.sh "{{cri_version}}"
 ...
