@@ -77,9 +77,9 @@
       ansible.builtin.apt:
         update_cache: true
         pkg:
-          - kubeadm="{{k8s_version}}"
-          - kubectl="{{k8s_version}}"
-          - kubelet="{{k8s_version}}"
+          - kubeadm={{k8s_version}}
+          - kubectl={{k8s_version}}
+          - kubelet={{k8s_version}}
         allow_downgrade: yes
 
     - name: Hold kubeadm
@@ -109,6 +109,7 @@
           {{addr}}   {{ansible_facts.hostname}}
           {% endfor %}
     - ansible.builtin.shell: kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address={{ansible_eth1.ipv4.address}}
+      # Here noch admin.conf nach .kube kopieren und chown
     - ansible.builtin.shell: kubectl taint nodes --all node-role.kubernetes.io/master-
 ...
 # Untaint master
