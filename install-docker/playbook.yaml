@@ -1,0 +1,8 @@
+---
+- hosts: ubuntu
+  become: true
+  become_user: root
+  tasks:
+  - name: Install Docker
+    ansible.builtin.script: ubuntu/install.sh
+...
