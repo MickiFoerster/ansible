@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 # Installation instructions taken from 
 # https://kubernetes.io/docs/setup/production-environment/container-runtimes/#docker
 
@@ -6,7 +6,7 @@ sudo apt-get update
 
 # Uninstall possible existing installations
 sudo apt-get remove docker docker-engine docker.io containerd runc
-sudo apt-get purge docker-ce docker-ce-cli containerd.io
+sudo apt-get purge -y docker-ce docker-ce-cli containerd.io
 sudo rm -rf /var/lib/docker
 sudo rm -rf /var/lib/containerd
 sudo rm -rf /etc/docker
@@ -22,7 +22,9 @@ if ! curl -fsSL https://download.docker.com/linux/ubuntu/gpg >$f; then
     echo "error: could not download docker gpg key"
     exit 1
 fi
-cat $f | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+out=/usr/share/keyrings/docker-archive-keyring.gpg
+rm -f ${out}
+cat $f | sudo gpg --dearmor -o ${out}
 
 echo \
   "deb [arch=$(dpkg --print-architecture) \
@@ -33,12 +35,16 @@ echo \
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
+sudo systemctl restart  docker.socket 
+sleep 1;
+sudo systemctl restart  docker.service
+
 if ! sudo docker run hello-world | grep -qs "Hello from Docker"; then 
     echo "error: could not start Hello World container"; 
     exit 1;
 fi
 
-sudo mkdir /etc/docker
+sudo mkdir -p /etc/docker
 cat <<EOF | sudo tee /etc/docker/daemon.json
 {
   "exec-opts": ["native.cgroupdriver=systemd"],
