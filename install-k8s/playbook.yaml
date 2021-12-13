@@ -49,12 +49,10 @@
   vars_files:
     - vars.yaml
   tasks:
-    - debug:
-        msg: "{{cri_version}}"
     - name: Letting iptables see bridged traffic
       ansible.builtin.script: helpers/letting-iptables-see-bridged-traffic.sh
-    - name: Install CRI-O
-      ansible.builtin.script: ../install-CRI-O/ubuntu/install.sh "{{cri_version}}"
+    - name: Install Docker
+      ansible.builtin.script: ../install-docker/ubuntu/install.sh
     - name: Prerequisites for kube* tools
       ansible.builtin.apt:
         update_cache: true
@@ -95,6 +93,7 @@
         name: kubelet
         selection: hold
 
+
 - hosts: ubuntu
   name: Create K8s cluster with kubeadm
   become: true
@@ -109,8 +108,18 @@
           {{addr}}   {{ansible_facts.hostname}}
           {% endfor %}
     - ansible.builtin.shell: kubeadm init --pod-network-cidr 10.244.0.0/16 --apiserver-advertise-address={{ansible_eth1.ipv4.address}}
-      # Here noch admin.conf nach .kube kopieren und chown
-    - ansible.builtin.shell: kubectl taint nodes --all node-role.kubernetes.io/master-
+    - ansible.builtin.shell: mkdir -p /home/vagrant/.kube
+    - ansible.builtin.shell: cp /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+    - ansible.builtin.shell: chown -R {{ansible_user}}. /home/vagrant/.kube
+    - name: Download foo.conf
+      get_url:
+        url: https://docs.projectcalico.org/manifests/calico.yaml
+        dest: /tmp/calico.yaml
+        mode: '0440'
+    - name: Install network plugin
+      ansible.builtin.shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl apply -f /tmp/calico.yaml
+    - name: Untaint control-plane such that pods can be scheduled
+      ansible.builtin.shell: KUBECONFIG=/etc/kubernetes/admin.conf kubectl taint nodes --all node-role.kubernetes.io/master-
 ...
 # Untaint master
 # kubectl taint nodes --all node-role.kubernetes.io/master-
