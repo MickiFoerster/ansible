@@ -51,8 +51,10 @@
   tasks:
     - name: Letting iptables see bridged traffic
       ansible.builtin.script: helpers/letting-iptables-see-bridged-traffic.sh
-    - name: Install Docker
-      ansible.builtin.script: ../install-docker/ubuntu/install.sh
+        #- name: Install Docker
+        #  ansible.builtin.script: ../install-docker/ubuntu/install.sh
+    - name: Install CRI-O
+      ansible.builtin.script: ../install-CRI-O/ubuntu/install.sh {{ cri_version }}
     - name: Prerequisites for kube* tools
       ansible.builtin.apt:
         update_cache: true
