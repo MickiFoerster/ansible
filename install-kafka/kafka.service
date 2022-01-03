@@ -1,0 +1,16 @@
+[Unit]
+Description=Kafka
+After=zookeeper.service
+Requires=zookeeper.service
+
+[Service]
+User=vagrant
+Group=vagrant
+Environment="KAFKA_HEAP_OPTS=-Xmx256M -Xms128M"
+#Environment="KAFKA_OPTS=-javaagent:/home/vagrant/prometheus/jmx_prometheus_javaagent-0.3.1.jar=8080:/home/vagrant/prometheus/kafka-0-8-2.yml"
+ExecStartPre="rm -rf /home/vagrant/kafka-data"
+ExecStart=/home/vagrant/kafka/bin/kafka-server-start.sh /home/vagrant/kafka.properties
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

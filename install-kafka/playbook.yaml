@@ -3,4 +3,14 @@
   roles:
     - java
     - zookeeper
+
+
+#  Create symbolic link kafka -> kafka_2.13-3.0.0
+#  mkdir kafka-data
+#  cp kafka.properties /home/vagrant
+#  cp kafka.service zookeeper.service /lib/systemd/system
+#  systemctl enable kafka.service
+#  systemctl enable zookeeper.service
+#
+#  Create clean cluster at startup otherwise ID of cluster will not match
 ...
