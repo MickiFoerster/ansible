@@ -18,7 +18,7 @@ sudo apt-get install -y \
     lsb-release
 
 f=/tmp/docker-key.gpg
-if ! curl -fsSL https://download.docker.com/linux/ubuntu/gpg >$f; then
+if ! curl --retry-delay 1 --retry 10 --retry-max-time 60 -fsSL https://download.docker.com/linux/ubuntu/gpg >$f; then
     echo "error: could not download docker gpg key"
     exit 1
 fi
