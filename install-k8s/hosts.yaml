@@ -1,12 +1,7 @@
 ubuntu:
   hosts:
-    master1:
+    k8s-single-node-11933:
       ansible_host: localhost
       ansible_user: vagrant 
-      ansible_port: 22222
-      ansible_ssh_private_key_file: /home/micki/workspace/go/src/github.com/MickiFoerster/ansible/install-k8s/.vagrant/machines/testing-node-1/virtualbox/private_key
-    worker1:
-      ansible_host: localhost
-      ansible_user: vagrant 
-      ansible_port: 22223
-      ansible_ssh_private_key_file: /home/micki/workspace/go/src/github.com/MickiFoerster/ansible/install-k8s/.vagrant/machines/testing-node-2/virtualbox/private_key
+      ansible_port: 2222
+      ansible_ssh_private_key_file: /home/micki/MickiFoerster/ansible/install-k8s/.vagrant/machines/k8s-single-node-11933/virtualbox/private_key

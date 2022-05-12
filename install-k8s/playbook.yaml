@@ -40,21 +40,31 @@
       ansible.builtin.command: cat "/tmp/machine-id/{{ item }}{{path_machine_id}}"
       loop: "{{ groups['all'] }}"
 
-- name: Enable Cgroup2
-  ansible.builtin.import_playbook: ../enable-cgroup2/playbook.yaml
-
 - hosts: ubuntu
   become: true
   become_user: root
   vars_files:
     - vars.yaml
   tasks:
+    - name: Enable Cgroup2
+      block:
+        - name: Upload binary for changing grub
+          ansible.builtin.copy:
+            src: helpers/enable-cgroupv2.elf
+            dest: /tmp/enable-cgroupv2.elf
+            mode: u=rwx,g=rx,o=rx
+        - name: Execute binary -> change /etc/default/grub
+          command: /tmp/enable-cgroupv2.elf
+        - name: Execute update-grub
+          command: update-grub
+        - name: Reboot machine to activate cgroupv2
+          reboot:
     - name: Letting iptables see bridged traffic
       ansible.builtin.script: helpers/letting-iptables-see-bridged-traffic.sh
-        #- name: Install Docker
-        #  ansible.builtin.script: ../install-docker/ubuntu/install.sh
-    - name: Install CRI-O
-      ansible.builtin.script: ../install-CRI-O/ubuntu/install.sh {{ cri_version }}
+    - name: Install Docker
+      ansible.builtin.script: ../install-docker/ubuntu/install.sh
+    #- name: Install CRI-O
+    #  ansible.builtin.script: ../install-CRI-O/ubuntu/install.sh {{ cri_version }}
     - name: Prerequisites for kube* tools
       ansible.builtin.apt:
         update_cache: true

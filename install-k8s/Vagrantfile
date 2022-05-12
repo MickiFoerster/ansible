@@ -1,29 +1,27 @@
 # -*- mode: ruby -*-
-# vi:set ft=ruby sw=2 ts=2 sts=2:
+# vi: set ft=ruby :
 
-# Define the number of master and worker nodes
-NUM_NODES = 2
-
-IP_NW = "192.168.99."
-IP_START = 100
-
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu2004"
-  config.vm.box_check_update = false
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
 
-  # Provision Master Nodes
-  (1..NUM_NODES).each do |i|
-    config.vm.define "testing-node-#{i}" do |testingnode|
-      # Name shown in the GUI
-      testingnode.vm.provider "virtualbox" do |vb|
-        vb.name = "kubetestingnode#{i}"
-        vb.memory = 2048
-        vb.cpus = 2
-      end
-      testingnode.vm.hostname = "testingnode#{i}"
-      testingnode.vm.network :private_network, ip: IP_NW + "#{IP_START + i}"
-      testingnode.vm.network "forwarded_port", guest: 22, host: "#{22221 + i}"
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "generic/ubuntu2010"
+  config.vm.define "k8s-single-node-11933" do |node|
+    node.vm.provider "virtualbox" do |vb|
+      vb.name = "k8s-single-node-11933"
+      vb.memory = 4096
+      vb.cpus = 2
     end
+    node.vm.hostname = "k8s-single-node-11933"
+    node.vm.network :private_network, ip: "192.168.99.200"
+    #node.vm.network "forwarded_port", guest: 22, host: 2222
+    node.vm.network "forwarded_port", guest: 6443, host: 6443
   end
-
 end
